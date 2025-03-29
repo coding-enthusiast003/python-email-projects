@@ -65,7 +65,7 @@ class EmailReceiver:
            
             print(f"Date: {msg['Date']}\n")
             
-            print(50 * "-")
+            print(80 * "-")
             connection.store(mail, "+FLAGS", "\\Seen")
             
         connection.logout()
