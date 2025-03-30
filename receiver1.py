@@ -85,7 +85,7 @@ class EmailReceiver:
         print("Emails fetched successfully!")
 
  
-class CommandInterface(EmailReceiver):
+class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
     def __init__(self):
         super().__init__() #Initializing the parent properties
         self.parser = argparse.ArgumentParser(
