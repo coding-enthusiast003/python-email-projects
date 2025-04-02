@@ -68,7 +68,12 @@ class EmailReceiver:
 
             # Parse the email content
             msg = email.message_from_bytes(msg_data[0][1])  # Convert bytes to string
-            subject, encoding = decode_header(msg["Subject"])[0]  # Decode the email subject
+
+            subject_data = msg["Subject"]  # Store subject first
+            if subject_data is None:
+                subject, encoding = "(No Subject)", None
+            else:
+                subject, encoding = decode_header(subject_data)[0]
 
             if isinstance(subject, bytes):  # Check if subject is in bytes
                 # If it's in bytes, decode to str using the detected encoding or default to utf-8 
@@ -79,7 +84,7 @@ class EmailReceiver:
             print(f"Subject: {subject}")
             print(f"Date: {msg['Date']}\n")
             print(80 * "-")
-        connection.store(mail, "+FLAGS", "\\Seen")
+            connection.store(mail, "+FLAGS", "\\Seen")
             
         connection.logout()
         print("Emails fetched successfully!")
