@@ -4,6 +4,8 @@ from email.header import decode_header
 import getpass
 import argparse
 
+ 
+
 class EmailReceiver:
     def __init__(self):
         self.imap_server = "imap.gmail.com"
@@ -78,6 +80,8 @@ class EmailReceiver:
             if isinstance(subject, bytes):  # Check if subject is in bytes
                 # If it's in bytes, decode to str using the detected encoding or default to utf-8 
                 subject = subject.decode(encoding if encoding else "utf-8")
+
+             
             # Print email details
             print(f"Email ID: {mail.decode('utf-8')}")
             print(f"From: {msg['From']}")
