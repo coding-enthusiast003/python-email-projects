@@ -2,8 +2,19 @@ import imaplib
 import email
 from email.header import decode_header
 import getpass
+import textwrap
 import argparse
 from receiver1 import  CommandInterface
+
+# Box drawing characters (Patterers for formatting the output)
+TOP_LEFT = "╔"
+TOP_RIGHT = "╗"
+BOTTOM_LEFT = "╚"
+BOTTOM_RIGHT = "╝"
+HORIZONTAL = "═"
+VERTICAL = "║"
+
+BOX_WIDTH = 100  # Adjusted width of the box for better formatting
 
 def extract_body(msg):
     """
@@ -91,17 +102,31 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                     msg = email.message_from_bytes(msg_data[0][1])
                     body, attachments = extract_body(msg)
 
-                    # Display the email content
-                    print(80* "-")
-                    print(f"\n📝 Extracted Email Body:\n{body}")  # Debugging print
-                    
+                    # Display the email content inside a formatted box
+                    print(f"{TOP_LEFT}{HORIZONTAL * BOX_WIDTH}{TOP_RIGHT}")  # Top border
+                    print(f"{VERTICAL} Email ID: {mail_id:<{BOX_WIDTH - 12}} {VERTICAL}") 
+                    print()
+                    print(f"{VERTICAL} From: {msg['From'][:BOX_WIDTH - 9]:<{BOX_WIDTH - 9}} {VERTICAL}")
+                    print()
+                    print(f"{VERTICAL} Body:{'':{BOX_WIDTH - 6}} {VERTICAL}")  # Label for body
+                    print()
+                    print()
+
+                    for line in textwrap.wrap(body, BOX_WIDTH - 2):
+                        print(f"{VERTICAL} {line:<{BOX_WIDTH - 2}} {VERTICAL}")
 
                     # Display attachments if available
                     if attachments:
-                        print("\n📎 **Attachments Found:**")
+                        print(f"{VERTICAL} Attachments: {'':{BOX_WIDTH - 13}} {VERTICAL}")
+                        print(f"{VERTICAL}{'📎 **Attachments Found:**':<{BOX_WIDTH - 2}}{VERTICAL}")
                         for file in attachments:
-                                print(f"🔗 {file}")
-                    print(80* "-")
+                            for line in textwrap.wrap(f"🔗 {file}", BOX_WIDTH - 2):
+                                print(f"{VERTICAL} {line:<{BOX_WIDTH - 2}} {VERTICAL}")
+                    else:
+                        print(f"{VERTICAL} Attachments: None{'':<{BOX_WIDTH - 20}} {VERTICAL}")
+
+                    print(f"{BOTTOM_LEFT}{HORIZONTAL * BOX_WIDTH}{BOTTOM_RIGHT}")  # Closing the box
+
                 else:
                     print(f"❌ Email with ID {mail_id} not found.")
 

@@ -26,7 +26,7 @@ class EmailReceiver:
             # Login to your account
             mail.login(self.username, self.password)
             mail.select('inbox')  # Select inbox folder
-            print(mail.capabilities)
+             
 
             return mail
         
