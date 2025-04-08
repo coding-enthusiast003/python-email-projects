@@ -1,4 +1,4 @@
-from main import Command  # Import the Command class from main.py
+from send_mails.main import Command  # Import the Command class from main.py
 import getpass
 from email.mime.base import MIMEBase  # Importing the MIMEBase class to create a base MIME type
 from email import encoders  # Importing the encoders module

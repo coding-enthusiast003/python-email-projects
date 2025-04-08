@@ -48,7 +48,7 @@ class Emailsender:
                 if msg:
                     for receiver in self.receivers:
                         server.sendmail(self.sender, receiver, msg.as_string())
-                        print(f"Email with attachment sent successfully to {receiver}!")
+                        print(f"Email sent successfully to {receiver}!")
                 else:
                     for receiver in self.receivers:
                         server.sendmail(self.sender, receiver, self.message)   #send the email
