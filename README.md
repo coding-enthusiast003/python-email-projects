@@ -62,9 +62,9 @@ pip install smtplib imaplib argparse getpass email
 
    To receive and read emails from your inbox:
    ```bash
-   python receive_mail/main.py \
-      --email example@gmail.com \
-      --password yourpassword
+   python receive_mail/receiver2.py \
+      --email "example@gmail.com" \
+       
    ```
 
 ## Security Best Practices 🔐
