@@ -1,8 +1,10 @@
 # Python Email Automation Project
 
-Automate email sending tasks in Python using the **SMTP protocol**. This project provides a **command-line interface (CLI)** for sending emails with attachments securely and efficiently.
+Automate email sending and receiving tasks in Python using the **SMTP protocol** and **IMAPLIB protocol** via a user-friendly **command-line interface (CLI)**.
 
 ## Features 🚀
+
+## ✉️ Sending Emails
 - 📩 Send emails using an SMTP server (Gmail, Outlook, Yahoo, etc.).
 - 🔒 Securely prompt for the sender's email password (no hardcoded credentials).
 - 📜 Support for multiple recipients.
@@ -10,6 +12,13 @@ Automate email sending tasks in Python using the **SMTP protocol**. This project
 - ⚡ Command-line interface for easy configuration.
 - ✅ Supports both **TLS & SSL encryption**.
 - 📝 Send plain text or **HTML-formatted** emails.
+
+### 📥 Receiving Emails
+- 📬 Fetch emails using IMAP protocol
+- 📂 List and read recent emails with proper formatting.
+- 🧾 Display email details like **sender, subject, and body**.
+- 📎 List and download attachments directly to your system
+- 🧠 Handles multipart emails and **inline attachments** smartly.
 
 ## Requirements 📌
 Ensure you have the following before running the project:
@@ -25,7 +34,7 @@ pip install -r requirements.txt
 ```
 Or install them manually:
 ```bash
-pip install smtplib argparse getpass email
+pip install smtplib imaplib argparse getpass email
 ```
 
 ## Installation & Setup ⚙️
@@ -35,25 +44,28 @@ pip install smtplib argparse getpass email
    cd python-email-projects
    ```
 
-2. Run the script with required arguments:
+2. **Sending Emails**
+
+   Run the script with required arguments:
    ```bash
-   python send_email.py --sender example@gmail.com \
-                        --receiver test@gmail.com \
-                        --subject "Test Email" \
-                        --body "Hello, this is a test email!" \
-                        --files "file1.pdf" "file2.jpg"
+   python send_email/main2.py \
+      --sender example@gmail.com \
+      --receiver test@gmail.com \
+      --subject "Test Email" \
+      --body "Hello, this is a test email!" \
+      --files "file1.pdf" "file2.jpg"
    ```
 
 3. Enter your email password securely when prompted.
 
-## Example Usage 📝
-```bash
-python send_email.py --sender "your_email@gmail.com" \
-                     --receiver "recipient@gmail.com" \
-                     --subject "Important Notice" \
-                     --body "Hello, please check the attached documents." \
-                     --files "report.pdf"
-```
+4. **Receiving Emails**
+
+   To receive and read emails from your inbox:
+   ```bash
+   python receive_mail/main.py \
+      --email example@gmail.com \
+      --password yourpassword
+   ```
 
 ## Security Best Practices 🔐
 - **DO NOT** hardcode email credentials inside the script.
@@ -61,7 +73,7 @@ python send_email.py --sender "your_email@gmail.com" \
 - Consider **OAuth authentication** for better security.
 
 ## Future Enhancements 🚀
-- 📂 **Listing received emails** (IMAP integration)
+ 
 - 🔍 **Checking for malicious attachments or phishing emails**
 - 📅 **Scheduling emails for future sending**
 - 📢 **Bulk email sending with rate limits**
