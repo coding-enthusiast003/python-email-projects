@@ -1,4 +1,4 @@
-import imaplib
+import os
 import email
 from email.header import decode_header
 import getpass
@@ -21,7 +21,8 @@ def extract_body(msg):
     try:
         # Check if the email has multiple parts (e.g., text + attachments)
         if msg.is_multipart():
-            for part in msg.walk():
+            for part in msg.walk(): #walk() in email module is used to iterate through the parts of the email message.
+                # Get the content type and disposition(header that indicates if the part is an attachment)  
                 content_type = part.get_content_type()
                 content_disposition = str(part.get("Content-Disposition"))  
                 
@@ -33,11 +34,12 @@ def extract_body(msg):
                     except Exception:
                         body = "Failed to decode email body."
 
-                # Collect attachment filenames
+                # Collect attachment filenames and content
                 elif "attachment" in content_disposition:
                     filename = part.get_filename()
-                    if filename:
-                        attachments.append(filename)
+                    content = part.get_payload(decode=True)
+                    if filename and content:
+                        attachments.append((filename, content))
 
         else:
             # If the email is not multipart, extract body directly
@@ -106,17 +108,29 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                     print("Body:")
                     print()  # Empty line for spacing
 
-                    for line in textwrap.wrap(body, width=wrap_width):  # Slightly under 100 to avoid full-width wrapping issues
+                    for line in textwrap.wrap(body, width=wrap_width):  #   Wrap the body text(to fit the terminal width)
                         print(f"{line}")
 
                     print()
 
-                    # Display attachments
+                    
                     print("Attachments:")
                     if attachments:
-                        for file in attachments:
-                            for line in textwrap.wrap(f"🔗 {file}", width=wrap_width):
-                                print(line)
+                        
+                        for filename, content in attachments:
+                            size_kb = len(content) / 1024  # Calculate size in KB
+                            for line in textwrap.wrap(f"🔗 {filename} ({size_kb:.2f} KB)", width=wrap_width):
+                                print(line) # Display attachments with memory details
+
+                            # Prompt to save the attachment
+                            save_attachments = input("Do you want to save the attachments? (y/n): ").strip().lower()
+                            if save_attachments == 'y':
+                                # Save the attachment to the current working directory
+
+                                file_path = os.path.join(os.getcwd(), filename)
+                                with open(file_path, "wb") as f:
+                                    f.write(content)
+                                    print(f"✅ Saved attachment: {filename} to {file_path}")
                     else:
                         print("Attachment : None")
 
