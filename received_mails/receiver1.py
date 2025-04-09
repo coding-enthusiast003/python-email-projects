@@ -88,7 +88,8 @@ class EmailReceiver:
             print(f"Subject: {subject}")
             print(f"Date: {msg['Date']}\n")
             print(80 * "-")
-            connection.store(mail, "+FLAGS", "\\Seen")
+            connection.store(mail.decode('utf-8'), "+FLAGS", "\\Seen")
+            print("Email marked as read.\n")
             
         connection.logout()
         print("Emails fetched successfully!")
