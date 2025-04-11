@@ -1,24 +1,33 @@
 # Python Email Automation Project
 
-Automate email sending and receiving tasks in Python using the **SMTP protocol** and **IMAPLIB protocol** via a user-friendly **command-line interface (CLI)**.
+A command-line interface tool for sending and receiving emails securely and efficiently using Python. Includes support for email scanning, CLI flags, and cross-platform script shortcuts.
+
+
 
 ## Features 🚀
+1. ✅ Send and receive emails via command line
 
-## ✉️ Sending Emails
-- 📩 Send emails using an SMTP server (Gmail, Outlook, Yahoo, etc.).
-- 🔒 Securely prompt for the sender's email password (no hardcoded credentials).
-- 📜 Support for multiple recipients.
-- 📎 Attach files (PDF, images, audio, etc.).
-- ⚡ Command-line interface for easy configuration.
-- ✅ Supports both **TLS & SSL encryption**.
-- 📝 Send plain text or **HTML-formatted** emails.
+2. 💾 Custom email filtering (future enhancement)
 
-### 📥 Receiving Emails
-- 📬 Fetch emails using IMAP protocol
-- 📂 List and read recent emails with proper formatting.
-- 🧾 Display email details like **sender, subject, and body**.
-- 📎 List and download attachments directly to your system
-- 🧠 Handles multipart emails and **inline attachments** smartly.
+3. 🔡️ Attachment safety scan (new!)
+
+   - Scans attachments before download using the VirusTotal API
+
+   - Prompts user based on the scan result
+
+   - Helps avoid downloading malicious files
+
+4. 🖥️ Windows Command Interface Support
+
+   - Run CLI scripts globally from CMD or PowerShell
+
+   - .bat scripts added in script/ folder
+
+   - Works via terminal shortcut using Python’s -m module support
+
+5. 🔐 Optional: OAuth authentication (planned)
+
+
 
 ## Requirements 📌
 Ensure you have the following before running the project:
@@ -29,10 +38,8 @@ Ensure you have the following before running the project:
 
 ### **Required Python Libraries**
 Install the required dependencies using pip:
-```bash
-pip install -r requirements.txt
-```
-Or install them manually:
+
+install them manually:
 ```bash
 pip install smtplib imaplib argparse getpass email
 ```
@@ -40,7 +47,7 @@ pip install smtplib imaplib argparse getpass email
 ## Installation & Setup ⚙️
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/python-email-projects.git
+   git clone https://github.com/coding-enthusiast003/python-email-projects.git
    cd python-email-projects
    ```
 
@@ -48,12 +55,7 @@ pip install smtplib imaplib argparse getpass email
 
    Run the script with required arguments:
    ```bash
-   python send_email/main2.py \
-      --sender example@gmail.com \
-      --receiver test@gmail.com \
-      --subject "Test Email" \
-      --body "Hello, this is a test email!" \
-      --files "file1.pdf" "file2.jpg"
+   sendmail -u "youremail@gmail.com" -to "recipient@example.com" -s "Subject" -b "Message Body"
    ```
 
 3. Enter your email password securely when prompted.
