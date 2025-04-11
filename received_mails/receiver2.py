@@ -4,7 +4,8 @@ from email.header import decode_header
 import getpass
 import textwrap
 import shutil
-from receiver1 import  CommandInterface
+from received_mails.receiver1 import CommandInterface
+from received_mails.scanfile import scan_attachment  # Importing specific function from scanfile.py
 
 # Get terminal width, fallback to 100
 terminal_width = shutil.get_terminal_size((100, 20)).columns
@@ -61,8 +62,9 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
     """
     Command-line interface for fetching and displaying email details, including attachments.
     """
-    def __init__(self):
+    def __init__(self, api_key="df173f2d2db16920d43696d72ca71b2432316a78b036c859bb42873eb4c77632"):
         super().__init__()
+        self.api_key = api_key  # API key for VirusTotal
 
     def final_run(self):
         """
@@ -121,6 +123,14 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                             size_kb = len(content) / 1024  # Calculate size in KB
                             for line in textwrap.wrap(f"🔗 {filename} ({size_kb:.2f} KB)", width=wrap_width):
                                 print(line) # Display attachments with memory details
+
+                            # Scan the attachment using VirusTotal API for safety
+                            prompt = input(f"Do you want to scan the attachment '{filename}' for safety? (y/n): ").strip().lower()
+                            if prompt == 'y' :
+                                if scan_attachment(content, filename, self.api_key):
+                                    print("✅ Attachment is safe.")
+                                else:
+                                    print("⚠️ Attachment flagged as unsafe.")
 
                             # Prompt to save the attachment
                             save_attachments = input("Do you want to save the attachments? (y/n): ").strip().lower()
