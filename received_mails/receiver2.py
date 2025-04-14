@@ -1,11 +1,12 @@
 import os
 import email
-from email.header import decode_header
+from received_mails.text_extract import extract_text_from_html  # Importing the function from text_extract.py
 import getpass
 import textwrap
 import shutil
 from received_mails.receiver1 import CommandInterface
 from received_mails.scanfile import scan_attachment  # Importing specific function from scanfile.py
+import webbrowser  # Import webbrowser module to open HTML files
 
 # Get terminal width, fallback to 100
 terminal_width = shutil.get_terminal_size((100, 20)).columns
@@ -13,27 +14,40 @@ wrap_width = terminal_width - 4  # Small margin for clean look
  
 def extract_body(msg):
     """
-    Extracts the plain text body and attachments from an email message.
+    Extracts the plain text body, HTML content, and attachments from an email message.
     """
- 
     body = ""
+    html_content = None
     attachments = []
 
     try:
         # Check if the email has multiple parts (e.g., text + attachments)
         if msg.is_multipart():
-            for part in msg.walk(): #walk() in email module is used to iterate through the parts of the email message.
-                # Get the content type and disposition(header that indicates if the part is an attachment)  
+            for part in msg.walk():  # walk() in email module is used to iterate through the parts of the email message.
+                # Get the content type and disposition (header that indicates if the part is an attachment)
                 content_type = part.get_content_type()
-                content_disposition = str(part.get("Content-Disposition"))  
-                
+                content_disposition = str(part.get("Content-Disposition"))
+
                 # Extract the plain text content
                 if content_type == "text/plain" and "attachment" not in content_disposition:
                     try:
                         decoded_payload = part.get_payload(decode=True)
-                        body = part.get_payload(decode=True).decode() if decoded_payload else "(Empty Body)"
+                        body = decoded_payload.decode() if decoded_payload else "(Empty Body)"
                     except Exception:
                         body = "Failed to decode email body."
+
+                # Extract HTML content and convert it to plain text
+                elif content_type == "text/html" and "attachment" not in content_disposition:
+                    try:
+                        html_payload = part.get_payload(decode=True)
+                        if html_payload:
+                            html_content = html_payload.decode()  # Decode the HTML content
+                            body = extract_text_from_html(html_content)  # Convert HTML to plain text
+                        else:
+                            html_content = None
+                    except Exception:
+                        html_content = None
+                        body = "Failed to decode HTML content."
 
                 # Collect attachment filenames and content
                 elif "attachment" in content_disposition:
@@ -55,16 +69,16 @@ def extract_body(msg):
         print(f"❌ Error processing email parts: {e}")
          
     
-    return body, attachments
+    return body, html_content, attachments
 
  
 class CommandInterface2(CommandInterface): #Inherited class from CommandInterface class
     """
     Command-line interface for fetching and displaying email details, including attachments.
     """
-    def __init__(self, api_key="df173f2d2db16920d43696d72ca71b2432316a78b036c859bb42873eb4c77632"):
+    def __init__(self):
         super().__init__()
-        self.api_key = api_key  # API key for VirusTotal
+        self.api_key = None  # API key for VirusTotal
 
     def final_run(self):
         """
@@ -98,7 +112,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
 
                 if status == 'OK' and msg_data[0] is not None:
                     msg = email.message_from_bytes(msg_data[0][1])
-                    body, attachments = extract_body(msg)
+                    body, html_content, attachments = extract_body(msg)
 
                     # Display the email content inside a formatted box
                     print("-" * 100)  # Top divider
@@ -115,6 +129,19 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
 
                     print()
 
+                    # Handle HTML content
+                    if html_content:
+                        save_html = input("This email contains HTML content. Do you want to save and view it? (y/n): ").strip().lower()
+                        if save_html == 'y':
+                            html_file = f"email_{mail_id}.html"
+                            with open(html_file, "w", encoding="utf-8") as f:
+                                f.write(html_content)
+                            print(f"✅ HTML content saved as {html_file}")
+                            open_html = input("Do you want to open the HTML content in your browser? (y/n): ").strip().lower()
+                            if open_html == 'y':
+                                webbrowser.open(html_file)
+                        print()
+
                     
                     print("Attachments:")
                     if attachments:
@@ -124,13 +151,21 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                             for line in textwrap.wrap(f"🔗 {filename} ({size_kb:.2f} KB)", width=wrap_width):
                                 print(line) # Display attachments with memory details
 
+                            print() #printing empty line for spacing
+                            print()
                             # Scan the attachment using VirusTotal API for safety
                             prompt = input(f"Do you want to scan the attachment '{filename}' for safety? (y/n): ").strip().lower()
                             if prompt == 'y' :
+                                self.api_key = input("Please enter your VirusTotal API key: ").strip()
+                                print("scanning attachments, please wait ...")
+                                print("It may take a few seconds to complete...")
                                 if scan_attachment(content, filename, self.api_key):
+                                    print()
                                     print("✅ Attachment is safe.")
                                 else:
                                     print("⚠️ Attachment flagged as unsafe.")
+                            print()
+                            print()
 
                             # Prompt to save the attachment
                             save_attachments = input("Do you want to save the attachments? (y/n): ").strip().lower()
