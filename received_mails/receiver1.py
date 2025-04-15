@@ -3,7 +3,8 @@ import email
 from email.header import decode_header
 import getpass
 import argparse
-
+import rich
+from rich.console import Console
  
 
 class EmailReceiver:
@@ -12,6 +13,7 @@ class EmailReceiver:
         self.imap_port = 993
         self.username = None
         self.password = None
+        self.console = Console()  # Creating an instance of Console for rich text output
          
 
     def user_details(self,username,password):
@@ -31,7 +33,7 @@ class EmailReceiver:
             return mail
         
         except imaplib.IMAP4.error as e:
-            print(f"Failed to connect to the server: {e}")
+            self.console.print(f"[bold red]Failed to connect to the server: {e}[/bold red]")
     
     def fetch_emailsID(self, mail):
         try:
@@ -39,15 +41,15 @@ class EmailReceiver:
             status, messages = mail.search(None, "ALL")
 
             if status != "OK" or not messages[0]:
-                print("No emails found.")
+                self.console.print("[bold red]No emails found.[/bold red]")
                 return []
             
             email_ids = messages[0].split()
-            print(f"Total emails: {len(email_ids)}\n")
+            self.console.print(f"[bold cyan]Total emails: {len(email_ids)}[/bold cyan]\n")
             return email_ids
         
         except Exception as e:
-            print(f"An error occurred while fetching emails: {e}")
+            self.console.print(f"[bold red]An error occurred while fetching emails: {e}[/bold red]")
             return []
 
     
@@ -59,11 +61,11 @@ class EmailReceiver:
         if not IDs:
             return  # Exit if no emails are found
 
-        num = int(input("Enter the number of emails to fetch: "))
+        num = int(self.console.input("[bold green]Enter the number of emails to fetch:[/bold green] "))
         if num > len(IDs):
-            print("Number exceeds total emails.")
+            self.console.print("[bold red]Number exceeds total emails.[/bold red]")
             return
-        print(f"Fetching {num} emails...\n")
+        self.console.print(f"[bold cyan]Fetching {num} emails...[/bold cyan]\n")
         for mail in sorted(IDs[-num:], reverse=True):
             # Fetch the email by ID
             status, msg_data = connection.fetch(mail, "(RFC822)")
@@ -83,16 +85,16 @@ class EmailReceiver:
 
              
             # Print email details
-            print(f"Email ID: {mail.decode('utf-8')}")
-            print(f"From: {msg['From']}")
-            print(f"Subject: {subject}")
-            print(f"Date: {msg['Date']}\n")
-            print(80 * "-")
+            self.console.print(f"[bold yellow]Email ID:[/bold yellow] {mail.decode('utf-8')}")
+            self.console.print(f"[bold yellow]From:[/bold yellow] {msg['From']}")
+            self.console.print(f"[bold yellow]Subject:[/bold yellow] {subject}")
+            self.console.print(f"[bold yellow]Date:[/bold yellow] {msg['Date']}\n")
+            self.console.print(f"[bold magenta]{80 * '-'}[/bold magenta]")
             connection.store(mail.decode('utf-8'), "+FLAGS", "\\Seen")
-            print("Email marked as read.\n")
+            self.console.print("[bold green]Email marked as read.[/bold green]\n")
             
         connection.logout()
-        print("Emails fetched successfully!")
+        self.console.print("[bold green]Emails fetched successfully![/bold green]")
 
  
 class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
@@ -110,7 +112,7 @@ class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
             args = self.parser.parse_args()  #parse the arguments
 
         # Use the provided password or prompt for it securely
-            self.password = args.password if args.password else getpass.getpass("Please enter your email password (input will be hidden): ")
+            self.password = args.password if args.password else self.console.input("[bold green]Please enter your email password (input will be hidden):[/bold green] ", password=True)
 
             # Set up the email receiver with the provided username and password
             self.user_details(
@@ -119,7 +121,7 @@ class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
             )
             self.fetch_mails()
         except Exception as e:
-            print(f"An error occurred: {e}")
+            self.console.print(f"[bold red]An error occurred: {e}[/bold red]")
 
 if __name__ == "__main__":
     cli = CommandInterface() #creating an object of the Command class

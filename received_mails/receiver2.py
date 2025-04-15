@@ -1,12 +1,12 @@
 import os
 import email
-from received_mails.text_extract import extract_text_from_html  # Importing the function from text_extract.py
-import getpass
+from received_mails.utility import *  # Importing the function from utility.py
 import textwrap
 import shutil
 from received_mails.receiver1 import CommandInterface
 from received_mails.scanfile import scan_attachment  # Importing specific function from scanfile.py
-import webbrowser  # Import webbrowser module to open HTML files
+from rich.console import Console
+
 
 # Get terminal width, fallback to 100
 terminal_width = shutil.get_terminal_size((100, 20)).columns
@@ -69,7 +69,7 @@ def extract_body(msg):
         print(f"❌ Error processing email parts: {e}")
          
     
-    return body, html_content, attachments
+    return body, html_content, attachments, msg.get("Message-ID")  # Explicitly calling msg.get("Message-ID")
 
  
 class CommandInterface2(CommandInterface): #Inherited class from CommandInterface class
@@ -79,7 +79,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
     def __init__(self):
         super().__init__()
         self.api_key = None  # API key for VirusTotal
-
+        self.console = Console()
     def final_run(self):
         """
         Overrides the final_run method to include file attachments.
@@ -90,7 +90,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
             args = self.parser.parse_args()
 
             # Prompt for password securely if not provided as an argument
-            self.password = args.password if args.password else getpass.getpass("Please enter your email password (input will be hidden): ")
+            self.password = args.password if args.password else self.console.input("[bold green]Please enter your email password (input will be hidden):[/bold green] ", password=True)
 
             # Set user details (username and password)
             self.user_details(username=args.username, password=self.password)
@@ -102,17 +102,17 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
 
             while True:
                 # Prompt user for an email ID to fetch
-                mail_id = input("Enter the email ID you want to fetch (or 'q' to quit): ")
+                mail_id = self.console.input("[bold green]Enter the email ID to fetch content (or 'q' to quit):[/bold green] ").strip()
 
                 if mail_id.lower() == 'q': #Quit the process
-                    print("Exiting...")
+                    self.console.print("Exiting...", style="bold cyan")
                     break
 
                 status, msg_data = connection1.fetch(mail_id, "(RFC822)")
 
                 if status == 'OK' and msg_data[0] is not None:
                     msg = email.message_from_bytes(msg_data[0][1])
-                    body, html_content, attachments = extract_body(msg)
+                    body, html_content, attachments, message_id = extract_body(msg)  # Assigning message_id
 
                     # Display the email content inside a formatted box
                     print("-" * 100)  # Top divider
@@ -125,31 +125,17 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                     print()  # Empty line for spacing
 
                     for line in textwrap.wrap(body, width=wrap_width):  #   Wrap the body text(to fit the terminal width)
-                        print(f"{line}")
+                        self.console.print(f"[bold white on black]{line}[/bold white on black]")
 
                     print()
 
-                    # Handle HTML content
-                    if html_content:
-                        save_html = input("This email contains HTML content. Do you want to save and view it? (y/n): ").strip().lower()
-                        if save_html == 'y':
-                            html_file = f"email_{mail_id}.html"
-                            with open(html_file, "w", encoding="utf-8") as f:
-                                f.write(html_content)
-                            print(f"✅ HTML content saved as {html_file}")
-                            open_html = input("Do you want to open the HTML content in your browser? (y/n): ").strip().lower()
-                            if open_html == 'y':
-                                webbrowser.open(html_file)
-                        print()
-
-                    
-                    print("Attachments:")
+                    self.console.print("[cyan]Attachments:[/cyan]")
                     if attachments:
                         
                         for filename, content in attachments:
                             size_kb = len(content) / 1024  # Calculate size in KB
                             for line in textwrap.wrap(f"🔗 {filename} ({size_kb:.2f} KB)", width=wrap_width):
-                                print(line) # Display attachments with memory details
+                                self.console.print(f"[bold white underline]{line}[/bold white underline]") # Display attachments with memory details
 
                             print() #printing empty line for spacing
                             print()
@@ -161,25 +147,29 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                                 print("It may take a few seconds to complete...")
                                 if scan_attachment(content, filename, self.api_key):
                                     print()
-                                    print("✅ Attachment is safe.")
+                                    self.console.print("✅ Attachment is safe.", style="green")
                                 else:
-                                    print("⚠️ Attachment flagged as unsafe.")
+                                    self.console.print("⚠️ Attachment flagged as unsafe.", style="bold red")
                             print()
                             print()
 
                             # Prompt to save the attachment
-                            save_attachments = input("Do you want to save the attachments? (y/n): ").strip().lower()
+                            save_attachments = self.console.input("[bold green]Do you want to save the attachments? (y/n): [/bold green]").strip().lower()
                             if save_attachments == 'y':
                                 # Save the attachment to the current working directory
 
                                 file_path = os.path.join(os.getcwd(), filename)
                                 with open(file_path, "wb") as f:
                                     f.write(content)
-                                    print(f"✅ Saved attachment: {filename} to {file_path}")
+                                    self.console.print(f"✅ Saved attachment: {filename} to {file_path}", style="green")
                     else:
-                        print("Attachment : None")
+                        self.console.print("Attachment : None", style="yellow")
+                    if message_id:
+                        open_url(message_id)  # Using message_id
+                    else:
+                        self.console.print("⚠️ No Message-ID found for this email.", style="yellow")
 
-                    print("-" * 100)  # Bottom divider
+                    self.console.print("-" * 100, style="bold white")  # Bottom divider
 
 
                 else:
