@@ -16,10 +16,12 @@ class EmailReceiver:
         self.console = Console()  # Creating an instance of Console for rich text output
          
 
-    def user_details(self,username,password):
-        self.username=  username
+     
+
+    def user_details(self, username , password):
+        self.username = username
         self.password = password
-        
+        return self.username, self.password
 
     def server_setup(self):
         try:
@@ -56,6 +58,9 @@ class EmailReceiver:
     def fetch_mails(self):
         # Iterate through the email IDs and fetch each email
         connection = self.server_setup()
+        if not connection:
+            raise Exception("Failed to establish connection.")
+        self.console.print("[bold green]Connected to the email server successfully![/bold green]")
 
         IDs = self.fetch_emailsID(connection)
         if not IDs:
@@ -116,9 +121,10 @@ class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
 
             # Set up the email receiver with the provided username and password
             self.user_details(
-                username=args.username,
-                password=self.password
-            )
+                username=args.username, password=self.password
+                )  #setting the user details
+            
+            self.console.print(f"[bold green]Logged in as: {self.username}[/bold green]")
             self.fetch_mails()
         except Exception as e:
             self.console.print(f"[bold red]An error occurred: {e}[/bold red]")

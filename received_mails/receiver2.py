@@ -1,4 +1,3 @@
-import os
 import email
 from received_mails.utility import *  # Importing the function from utility.py
 import textwrap
@@ -80,6 +79,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
         super().__init__()
         self.api_key = None  # API key for VirusTotal
         self.console = Console()
+        self.email_chache = None
     def final_run(self):
         """
         Overrides the final_run method to include file attachments.
@@ -88,17 +88,23 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
         try:
             # Parse command-line arguments
             args = self.parser.parse_args()
-
+            ui()
             # Prompt for password securely if not provided as an argument
             self.password = args.password if args.password else self.console.input("[bold green]Please enter your email password (input will be hidden):[/bold green] ", password=True)
 
             # Set user details (username and password)
             self.user_details(username=args.username, password=self.password)
 
-            # Fetch a list of available emails             
-            self.fetch_mails()
+            # Establish connection to the email server
+            connection = self.server_setup()  # Establish connection once
 
-            connection1 = self.server_setup()  # Establish connection to the email server
+            # Fetch a list of available emails
+            # self.fetch_mails()
+            if self.email_chache is None:
+                self.email_chache = self.fetch_mails()  # Fetch emails if not already done
+            else:
+                self.console.print("[bold green]Emails already fetched![/bold green]")
+                self.console.print(f"[bold green]Logged in as: {self.username}[/bold green]")
 
             while True:
                 # Prompt user for an email ID to fetch
@@ -108,7 +114,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                     self.console.print("Exiting...", style="bold cyan")
                     break
 
-                status, msg_data = connection1.fetch(mail_id, "(RFC822)")
+                status, msg_data = connection.fetch(mail_id, "(RFC822)")
 
                 if status == 'OK' and msg_data[0] is not None:
                     msg = email.message_from_bytes(msg_data[0][1])
@@ -157,15 +163,14 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                             save_attachments = self.console.input("[bold green]Do you want to save the attachments? (y/n): [/bold green]").strip().lower()
                             if save_attachments == 'y':
                                 # Save the attachment to the current working directory
-
-                                file_path = os.path.join(os.getcwd(), filename)
-                                with open(file_path, "wb") as f:
-                                    f.write(content)
-                                    self.console.print(f"✅ Saved attachment: {filename} to {file_path}", style="green")
+                                filename = filename.replace("/", "_")  # Replace any slashes in the filename to avoid directory issues
+                                save(filename, content)  # Using the save function from utility.py
+                                 
                     else:
                         self.console.print("Attachment : None", style="yellow")
                     if message_id:
-                        open_url(message_id)  # Using message_id
+                        #calling the function from utility.py to open the email in browser
+                        open_url(message_id)  # Using message_id to open in gmail 
                     else:
                         self.console.print("⚠️ No Message-ID found for this email.", style="yellow")
 
@@ -175,7 +180,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                 else:
                     print(f"❌ Email with ID {mail_id} not found.")
 
-            connection1.logout() #Log out from the Email server after processing
+            connection.logout() #Log out from the Email server after processing
         
         except Exception as e:
             print(f"An error occurred: {e}")
