@@ -80,6 +80,8 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
         self.api_key = None  # API key for VirusTotal
         self.console = Console()
         self.email_chache = None
+        self.connection = None  # Connection instance
+
     def final_run(self):
         """
         Overrides the final_run method to include file attachments.
@@ -88,7 +90,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
         try:
             # Parse command-line arguments
             args = self.parser.parse_args()
-            ui()
+            ui() # Display the user interface
             # Prompt for password securely if not provided as an argument
             self.password = args.password if args.password else self.console.input("[bold green]Please enter your email password (input will be hidden):[/bold green] ", password=True)
 
@@ -96,15 +98,11 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
             self.user_details(username=args.username, password=self.password)
 
             # Establish connection to the email server
-            connection = self.server_setup()  # Establish connection once
+            if self.connection is None:
+                self.connection = self.server_setup()  # Establish connection once
 
             # Fetch a list of available emails
-            # self.fetch_mails()
-            if self.email_chache is None:
-                self.email_chache = self.fetch_mails()  # Fetch emails if not already done
-            else:
-                self.console.print("[bold green]Emails already fetched![/bold green]")
-                self.console.print(f"[bold green]Logged in as: {self.username}[/bold green]")
+            self.fetch_mails()  # Fetch emails from the server
 
             while True:
                 # Prompt user for an email ID to fetch
@@ -114,7 +112,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                     self.console.print("Exiting...", style="bold cyan")
                     break
 
-                status, msg_data = connection.fetch(mail_id, "(RFC822)")
+                status, msg_data = self.connection.fetch(mail_id, "(RFC822)")
 
                 if status == 'OK' and msg_data[0] is not None:
                     msg = email.message_from_bytes(msg_data[0][1])
@@ -180,7 +178,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                 else:
                     print(f"❌ Email with ID {mail_id} not found.")
 
-            connection.logout() #Log out from the Email server after processing
+            self.connection.logout() #Log out from the Email server after processing
         
         except Exception as e:
             print(f"An error occurred: {e}")

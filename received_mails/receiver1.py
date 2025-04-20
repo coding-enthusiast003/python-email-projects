@@ -6,6 +6,7 @@ import argparse
 import rich
 from rich.console import Console
  
+ 
 
 class EmailReceiver:
     def __init__(self):
@@ -30,8 +31,7 @@ class EmailReceiver:
             # Login to your account
             mail.login(self.username, self.password)
             mail.select('inbox')  # Select inbox folder
-             
-
+            
             return mail
         
         except imaplib.IMAP4.error as e:
@@ -56,6 +56,7 @@ class EmailReceiver:
 
     
     def fetch_mails(self):
+       
         # Iterate through the email IDs and fetch each email
         connection = self.server_setup()
         if not connection:
@@ -87,8 +88,7 @@ class EmailReceiver:
             if isinstance(subject, bytes):  # Check if subject is in bytes
                 # If it's in bytes, decode to str using the detected encoding or default to utf-8 
                 subject = subject.decode(encoding if encoding else "utf-8")
-
-             
+            
             # Print email details
             self.console.print(f"[bold yellow]Email ID:[/bold yellow] {mail.decode('utf-8')}")
             self.console.print(f"[bold yellow]From:[/bold yellow] {msg['From']}")

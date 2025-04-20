@@ -5,6 +5,9 @@ import os  # To handle file operations
 from pyfiglet import Figlet
 from rich.console import Console
 from rich.text import Text
+import email
+from email.header import decode_header
+import imaplib
 
 console = Console()
 
@@ -22,7 +25,6 @@ def extract_text_from_html(html_content: str) -> str:
     return soup.get_text(strip=True)
 
 
-
 def open_url(message_id: str) -> None:
     """
     Opens an email in Gmail using its message ID.
@@ -38,7 +40,6 @@ def open_url(message_id: str) -> None:
             gmail_url = f"https://mail.google.com/mail/u/0/#search/rfc822msgid:{message_id}"
             webbrowser.open(gmail_url)
             console.print(f"🌐 Opened email in browser: {gmail_url}", style="cyan")
-
 
 
 def save(filename: str, content: bytes) -> None:
@@ -69,12 +70,45 @@ def ui():
     fig = Figlet(font='slant')  # Try 'standard', 'slant', 'big', etc.
 
     # Create colored segments
-    py_text = Text(fig.renderText("Pigeon"), style="bold green")
-    term_text = Text(fig.renderText("Mail"), style="bold blue")
-     
-    # Print them together
+    py_text = Text(fig.renderText("Pigeon Mail"), style="bold cyan")
+     # Print them together
     console.print(py_text)
-    console.print(term_text)
     
 
+    console.print("[bold blue]Welcome to Pigeon Mail![/bold blue]")
+    
     console.print("\n" + "-" * 50)  # Divider line
+    
+    
+     
+def delete(mail_id: str, connection) :
+    """
+    Deletes an email by its ID.
+
+    Args:
+        mail_id (str): The unique ID of the email to delete.
+    """
+    try:
+        ask = input("Do you want to delete this email? (y/n): ").strip().lower()
+        if ask != 'y':
+            return  # Exit if the user does not want to delete the email
+        
+        # Mark the email for deletion
+        status, response = connection.uid('STORE', mail_id, '+FLAGS', '(\\Deleted)')
+        if status == 'OK':
+            console.print(f"✅ Email with ID {mail_id} marked for deletion.", style="green")
+            
+            # Expunge to permanently delete the email
+            connection.expunge()
+            console.print(f"✅ Email with ID {mail_id} permanently deleted.", style="green")
+        else:
+            console.print(f"❌ Failed to delete email with ID {mail_id}.", style="red")
+        
+        
+    except Exception as e:
+        console.print(f"❌ An error occurred while deleting email: {e}", style="red")
+
+
+
+
+
