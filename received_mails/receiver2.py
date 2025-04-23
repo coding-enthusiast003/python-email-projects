@@ -78,8 +78,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
     def __init__(self):
         super().__init__()
         self.api_key = None  # API key for VirusTotal
-        self.console = Console()
-        self.email_chache = None
+        self.console = Console() # Console instance for rich text display
         self.connection = None  # Connection instance
 
     def final_run(self):
@@ -90,7 +89,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
         try:
             # Parse command-line arguments
             args = self.parser.parse_args()
-            ui() # Display the user interface
+           
             # Prompt for password securely if not provided as an argument
             self.password = args.password if args.password else self.console.input("[bold green]Please enter your email password (input will be hidden):[/bold green] ", password=True)
 
@@ -99,10 +98,20 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
 
             # Establish connection to the email server
             if self.connection is None:
-                self.connection = self.server_setup()  # Establish connection once
-
-            # Fetch a list of available emails
-            self.fetch_mails()  # Fetch emails from the server
+                try:
+                    self.connection = self.server_setup()  # Establish connection once
+                    if self.connection:
+                         # Call the UI function only after a successful connection
+                        ui()  # Display the UI after successful connection
+                        
+                        self.fetch_mails() # Fetch emails after connection
+                    else:
+                        raise ConnectionError("Failed to establish connection.")
+                   
+                except Exception as e:
+                    raise ConnectionError(f"Connection Error: {e}")
+                    
+            
 
             while True:
                 # Prompt user for an email ID to fetch
@@ -182,6 +191,10 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
         
         except Exception as e:
             print(f"An error occurred: {e}")
+        except KeyboardInterrupt:
+            self.console.print("[bold red]Program interrupted by user.[/bold red]")
+        except SystemExit:
+            self.console.print("[bold red]Program exited.[/bold red]")    
 
 if __name__== "__main__":
     prompt = CommandInterface2()

@@ -5,8 +5,7 @@ import getpass
 import argparse
 import rich
 from rich.console import Console
- 
- 
+  
 
 class EmailReceiver:
     def __init__(self):
@@ -15,6 +14,7 @@ class EmailReceiver:
         self.username = None
         self.password = None
         self.console = Console()  # Creating an instance of Console for rich text output
+        self.connection = None  # Initialize connection attribute
          
 
      
@@ -40,7 +40,7 @@ class EmailReceiver:
     def fetch_emailsID(self, mail):
         try:
             # Fetch all emails in the inbox
-            status, messages = mail.search(None, "ALL")
+            status, messages = mail.search(None, "ALL") 
 
             if status != "OK" or not messages[0]:
                 self.console.print("[bold red]No emails found.[/bold red]")
@@ -58,12 +58,15 @@ class EmailReceiver:
     def fetch_mails(self):
        
         # Iterate through the email IDs and fetch each email
-        connection = self.server_setup()
-        if not connection:
-            raise Exception("Failed to establish connection.")
-        self.console.print("[bold green]Connected to the email server successfully![/bold green]")
+        if not hasattr(self, 'connection') or self.connection is None:
+            self.connection = self.server_setup()
+            if not self.connection:
+                raise Exception("Failed to establish connection.")
+            self.console.print(f"[bold green]Logged in as: {self.username}[/bold green]")
+        else:
+            self.console.print(f"[bold cyan]Reusing existing connection, already logged in as {self.username}.[/bold cyan]")
 
-        IDs = self.fetch_emailsID(connection)
+        IDs = self.fetch_emailsID(self.connection)
         if not IDs:
             return  # Exit if no emails are found
 
@@ -74,7 +77,7 @@ class EmailReceiver:
         self.console.print(f"[bold cyan]Fetching {num} emails...[/bold cyan]\n")
         for mail in sorted(IDs[-num:], reverse=True):
             # Fetch the email by ID
-            status, msg_data = connection.fetch(mail, "(RFC822)")
+            status, msg_data = self.connection.fetch(mail, "(RFC822)")
 
             # Parse the email content
             msg = email.message_from_bytes(msg_data[0][1])  # Convert bytes to string
@@ -95,10 +98,9 @@ class EmailReceiver:
             self.console.print(f"[bold yellow]Subject:[/bold yellow] {subject}")
             self.console.print(f"[bold yellow]Date:[/bold yellow] {msg['Date']}\n")
             self.console.print(f"[bold magenta]{80 * '-'}[/bold magenta]")
-            connection.store(mail.decode('utf-8'), "+FLAGS", "\\Seen")
+            self.connection.store(mail.decode('utf-8'), "+FLAGS", "\\Seen")
             self.console.print("[bold green]Email marked as read.[/bold green]\n")
             
-        connection.logout()
         self.console.print("[bold green]Emails fetched successfully![/bold green]")
 
  
@@ -124,8 +126,14 @@ class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
                 username=args.username, password=self.password
                 )  #setting the user details
             
-            self.console.print(f"[bold green]Logged in as: {self.username}[/bold green]")
-            self.fetch_mails()
+             
+            self.fetch_mails() #calling the fetch_mails method from parent class to fetch the emails
+            self.connection.logout()  # Logout from the email server
+            self.console.print("[bold green]Logged out successfully![/bold green]") #printing this message for debugging purpose
+        except KeyboardInterrupt:
+            self.console.print("[bold red]Program interrupted by user.[/bold red]")
+        except SystemExit:
+            self.console.print("[bold red]Program exited.[/bold red]")    
         except Exception as e:
             self.console.print(f"[bold red]An error occurred: {e}[/bold red]")
 
