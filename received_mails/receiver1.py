@@ -1,7 +1,6 @@
 import imaplib
 import email
 from email.header import decode_header
-import getpass
 import argparse
 import rich
 from rich.console import Console
@@ -28,6 +27,9 @@ class EmailReceiver:
         try:
             # Connect to the IMAP server
             mail = imaplib.IMAP4_SSL(self.imap_server, self.imap_port)
+            # Ensure username and password are provided
+            if not self.username or not self.password:
+                raise ValueError("Username and password must not be None.")
             # Login to your account
             mail.login(self.username, self.password)
             mail.select('inbox')  # Select inbox folder
@@ -70,17 +72,35 @@ class EmailReceiver:
         if not IDs:
             return  # Exit if no emails are found
 
-        num = int(self.console.input("[bold green]Enter the number of emails to fetch:[/bold green] "))
-        if num > len(IDs):
-            self.console.print("[bold red]Number exceeds total emails.[/bold red]")
-            return
+        # Input validation for number of emails to fetch
+        while True:
+            num_input = self.console.input("[bold green]Enter the number of emails to fetch:[/bold green] ")
+            if not num_input.strip():
+                self.console.print("[bold red]Input cannot be empty. Please enter a number.[/bold red]")
+                continue
+            try:
+                num = int(num_input)
+                if num <= 0:
+                    self.console.print("[bold red]Please enter a positive number.[/bold red]")
+                    continue
+                if num > len(IDs):
+                    self.console.print("[bold red]Number exceeds total emails.[/bold red]")
+                    continue
+                break
+            except ValueError:
+                self.console.print("[bold red]Invalid input. Please enter a valid number.[/bold red]")
+
         self.console.print(f"[bold cyan]Fetching {num} emails...[/bold cyan]\n")
         for mail in sorted(IDs[-num:], reverse=True):
             # Fetch the email by ID
             status, msg_data = self.connection.fetch(mail, "(RFC822)")
 
-            # Parse the email content
-            msg = email.message_from_bytes(msg_data[0][1])  # Convert bytes to string
+            # Parse the email content safely
+            if msg_data and isinstance(msg_data[0], tuple) and isinstance(msg_data[0][1], (bytes, bytearray)):
+                msg = email.message_from_bytes(msg_data[0][1])  # Convert bytes to string
+            else:
+                self.console.print(f"[bold red]Failed to fetch or parse email with ID {mail.decode('utf-8')}.[/bold red]")
+                continue
 
             subject_data = msg["Subject"]  # Store subject first
             if subject_data is None:
@@ -128,8 +148,12 @@ class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
             
              
             self.fetch_mails() #calling the fetch_mails method from parent class to fetch the emails
-            self.connection.logout()  # Logout from the email server
-            self.console.print("[bold green]Logged out successfully![/bold green]") #printing this message for debugging purpose
+
+            if self.connection:  # Only logout if connection exists
+                self.connection.logout()  # Logout from the email server
+                self.console.print("[bold green]Logged out successfully![/bold green]") #printing this message for debugging purpose
+            else:
+                self.console.print("[bold yellow]No active connection to logout.[/bold yellow]")
         except KeyboardInterrupt:
             self.console.print("[bold red]Program interrupted by user.[/bold red]")
         except SystemExit:

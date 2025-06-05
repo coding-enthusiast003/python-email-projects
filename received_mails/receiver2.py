@@ -124,8 +124,13 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                 status, msg_data = self.connection.fetch(mail_id, "(RFC822)")
 
                 if status == 'OK' and msg_data[0] is not None:
-                    msg = email.message_from_bytes(msg_data[0][1])
-                    body, html_content, attachments, message_id = extract_body(msg)  # Assigning message_id
+                    raw_email = msg_data[0][1]
+                    if isinstance(raw_email, bytes): # Check if raw_email is in bytes format
+                        msg = email.message_from_bytes(raw_email) # Create email message from bytes
+                        body, html_content, attachments, message_id = extract_body(msg)  # Assigning message_id
+                    else:
+                        print("❌ Failed to fetch email content: Data is not in bytes format.")
+                        continue
 
                     # Display the email content inside a formatted box
                     print("-" * 100)  # Top divider
@@ -141,6 +146,9 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                         self.console.print(f"[bold white on black]{line}[/bold white on black]")
 
                     print()
+                    save_html = self.console.input("[bold green]Do you want to save the HTML content? (y/n): [/bold green]").strip().lower()
+                    if save_html == "y" and html_content:
+                        extract_text_from_html(html_content)
 
                     self.console.print("[cyan]Attachments:[/cyan]")
                     if attachments:
@@ -172,7 +180,9 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                                 # Save the attachment to the current working directory
                                 filename = filename.replace("/", "_")  # Replace any slashes in the filename to avoid directory issues
                                 save(filename, content)  # Using the save function from utility.py
-                                 
+
+                            print()
+                            
                     else:
                         self.console.print("Attachment : None", style="yellow")
                     if message_id:
@@ -188,14 +198,14 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                     print(f"❌ Email with ID {mail_id} not found.")
 
             self.connection.logout() #Log out from the Email server after processing
-        
-        except Exception as e:
-            print(f"An error occurred: {e}")
+
         except KeyboardInterrupt:
             self.console.print("[bold red]Program interrupted by user.[/bold red]")
         except SystemExit:
             self.console.print("[bold red]Program exited.[/bold red]")    
-
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        
 if __name__== "__main__":
     prompt = CommandInterface2()
     prompt.final_run()
