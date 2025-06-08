@@ -3,7 +3,7 @@ import time
 
 
 
-def scan_attachment(payload_bytes, filename, api_key):
+def scan_attachment(payload_bytes, filename, api_key): #Function to scan attachment using virustotal API
     url = "https://www.virustotal.com/api/v3/files"
     headers = {"x-apikey": api_key}
     

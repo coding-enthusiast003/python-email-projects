@@ -146,9 +146,13 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                         self.console.print(f"[bold white on black]{line}[/bold white on black]")
 
                     print()
-                    save_html = self.console.input("[bold green]Do you want to save the HTML content? (y/n): [/bold green]").strip().lower()
-                    if save_html == "y" and html_content:
-                        extract_text_from_html(html_content)
+                    save_html_choice = self.console.input("[bold green]Do you want to save the HTML content? (y/n): [/bold green]").strip().lower()
+                    if save_html_choice == "y" and html_content:
+                        # Save the HTML content to a file
+                        filename = f"email_{mail_id}.html"
+                        save_html(filename , html_content)  # Using the save_html function from utility.py
+                    else:
+                        self.console.print("HTML content unable to save or not provided.", style = "yellow")
 
                     self.console.print("[cyan]Attachments:[/cyan]")
                     if attachments:
@@ -174,7 +178,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                             print()
                             print()
 
-                            # Prompt to save the attachment
+                                # Prompt to save the attachment
                             save_attachments = self.console.input("[bold green]Do you want to save the attachments? (y/n): [/bold green]").strip().lower()
                             if save_attachments == 'y':
                                 # Save the attachment to the current working directory

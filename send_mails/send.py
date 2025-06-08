@@ -1,6 +1,7 @@
 import argparse      #importing the argparse module for command line arguments
 import smtplib as s  #importing the smtplib module for sending emails
 import getpass       #importing the getpass module for secure password input
+from rich.console import Console  # Importing the Console class from rich for better output formatting
 
 
 class Emailsender:
@@ -31,31 +32,38 @@ class Emailsender:
         self.password = None
         self.receivers = []
         self.message = None
+        self.console = Console()  # Create a Console object for rich output
 
     def setup_message(self, sender, password, receivers, subject, body):
         self.sender = sender
         self.password = password
         self.receivers = [email.strip() for email in receivers.split(",")]
         self.message = f"Subject: {subject}\n\n{body}"
+        return self.sender, self.password, self.receivers, self.message
 
-    def server_connection(self,msg=None):
+    def server_connection(self, msg=None):
         try:
+            if self.sender is None or self.password is None:
+                raise ValueError("Sender email and password must not be None.")
+            if msg is None and self.message is None:
+                raise ValueError("Email message must not be None.")
+
             with s.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()    #start the TLS connection for secure communication
-                server.login(self.sender, self.password)    #login to the email account
+                server.login(str(self.sender), str(self.password))    #login to the email account
 
                 # If a MIMEMultipart message is provided, send it
                 if msg:
                     for receiver in self.receivers:
-                        server.sendmail(self.sender, receiver, msg.as_string())
-                        print(f"Email sent successfully to {receiver}!")
+                        server.sendmail(str(self.sender), receiver, msg.as_string())
+                        self.console.print(f"Email sent successfully to {receiver}!", style="bold green")
                 else:
                     for receiver in self.receivers:
-                        server.sendmail(self.sender, receiver, self.message)   #send the email
-                        print(f"Email sent successfully to {receiver}!")
+                        server.sendmail(str(self.sender), receiver, str(self.message))   #send the email
+                        self.console.print(f"Email sent successfully to {receiver}!", style="bold green")
 
         except Exception as e:
-            print(f"Failed to send email: {e}")
+            self.console.print(f"Failed to send email: {e}", style="bold red")
 
 
 class Command(Emailsender):

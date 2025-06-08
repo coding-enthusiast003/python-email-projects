@@ -2,16 +2,12 @@ from bs4 import BeautifulSoup  # For parsing HTML content
 import webbrowser  # To open URLs in the default browser
 from rich.console import Console  # For rich console output
 import os  # To handle file operations
-from pyfiglet import Figlet
-from rich.console import Console
-from rich.text import Text
-import email
-from email.header import decode_header
-import imaplib
+from pyfiglet import Figlet # For creating ASCII art text
+from rich.text import Text # For rich text formatting
 
 console = Console()
 
-def extract_text_from_html(html_content: str) -> str:
+def extract_text_from_html(html_content: str) -> str: #function to extract text from HTML content
     """
     Extracts plain text from HTML content.
 
@@ -25,7 +21,8 @@ def extract_text_from_html(html_content: str) -> str:
     return soup.get_text(strip=True)
 
 
-def open_url(message_id: str) -> None:
+
+def open_url(message_id: str) -> None: #function to open the email in gmail
     """
     Opens an email in Gmail using its message ID.
 
@@ -42,7 +39,7 @@ def open_url(message_id: str) -> None:
             console.print(f"🌐 Opened email in browser: {gmail_url}", style="cyan")
 
 
-def save(filename: str, content: bytes) -> None:
+def save(filename: str, content: bytes) -> None: #function to save the attachment
     """
     Saves content to a file.
 
@@ -57,6 +54,23 @@ def save(filename: str, content: bytes) -> None:
         console.print(f"✅ Saved attachment: {filename} to {file_path}", style="green")
     except Exception as e:
         console.print(f"❌ Failed to save attachment: {filename}. Error: {e}", style="red")
+
+
+def save_html(filename: str, content: str) -> None: #function to save the html content of an email to a file
+    """
+    Saves HTML content to a file.
+
+    Args:
+        filename (str): The name of the file to save.
+        content (str): The HTML content to write to the file.
+    """
+    try:
+        file_path = os.path.join(os.getcwd(), filename)
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        console.print(f"✅ Saved HTML content: {filename} to {file_path}", style="green")
+    except Exception as e:
+        console.print(f"❌ Failed to save HTML content: {filename}. Error: {e}", style="red")
 
 
 def ui():

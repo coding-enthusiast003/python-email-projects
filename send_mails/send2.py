@@ -4,7 +4,7 @@ from email.mime.base import MIMEBase  # Importing the MIMEBase class to create a
 from email import encoders  # Importing the encoders module
 from email.mime.multipart import MIMEMultipart  # Importing the MIMEMultipart class to create a multipart message
 from email.mime.text import MIMEText  # Importing the MIMEText class to create a text message
-
+from rich.console import Console  # Importing the Console class from rich for better output formatting
 
 class CommandWithAttachments(Command):
     """
@@ -15,6 +15,7 @@ class CommandWithAttachments(Command):
         self.parser.add_argument(
             "-f", "--files", nargs="+", required=False, help="File paths to attach"
         )
+        self.console  = Console()  # Create a Console object for rich output
 
     def add_attachments(self, msg, files):
         """
@@ -39,7 +40,7 @@ class CommandWithAttachments(Command):
         args = self.parser.parse_args()  # Parse the arguments
 
         # Prompt for the password securely if not provided in arguments
-        password = getpass.getpass("Please enter your email password (input will be hidden): ")
+        password = self.console.input("[bold green]Please enter your email password (input will be hidden):[/bold green] ", password=True)  # Securely prompt for password
 
         # Set up the email with parsed arguments
         self.setup_message(
@@ -52,7 +53,7 @@ class CommandWithAttachments(Command):
 
         # Create a MIMEMultipart message for attachments
         msg = MIMEMultipart()
-        msg["From"] = self.sender
+        msg["From"] = str(self.sender)
         msg["To"] = ", ".join(self.receivers)
         msg["Subject"] = args.subject
         msg.attach(MIMEText(args.body, "plain"))
