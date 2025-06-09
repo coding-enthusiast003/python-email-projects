@@ -2,7 +2,7 @@ import argparse      #importing the argparse module for command line arguments
 import smtplib as s  #importing the smtplib module for sending emails
 import getpass       #importing the getpass module for secure password input
 from rich.console import Console  # Importing the Console class from rich for better output formatting
-
+from send_mails.utility import *  # Importing utility functions from the utility module
 
 class Emailsender:
     """
@@ -37,7 +37,13 @@ class Emailsender:
     def setup_message(self, sender, password, receivers, subject, body):
         self.sender = sender
         self.password = password
-        self.receivers = [email.strip() for email in receivers.split(",")]
+        # Accept both comma-separated string and list for receivers
+        if isinstance(receivers, str):
+            self.receivers = [email.strip() for email in receivers.split(",")]
+        elif isinstance(receivers, list):
+            self.receivers = [email.strip() for email in receivers]
+        else:
+            self.receivers = []
         self.message = f"Subject: {subject}\n\n{body}"
         return self.sender, self.password, self.receivers, self.message
 
@@ -50,8 +56,10 @@ class Emailsender:
 
             with s.SMTP(self.smtp_server, self.smtp_port) as server:
                 server.starttls()    #start the TLS connection for secure communication
-                server.login(str(self.sender), str(self.password))    #login to the email account
-
+                connect = server.login(str(self.sender), str(self.password))    #login to the email account
+                if connect:
+                    ui() #calling the ui function to print the user interface
+                    self.console.print(f"Connected to {self.smtp_server} as {self.sender}", style="bold green")
                 # If a MIMEMultipart message is provided, send it
                 if msg:
                     for receiver in self.receivers:
@@ -61,9 +69,12 @@ class Emailsender:
                     for receiver in self.receivers:
                         server.sendmail(str(self.sender), receiver, str(self.message))   #send the email
                         self.console.print(f"Email sent successfully to {receiver}!", style="bold green")
-
+        except s.SMTPAuthenticationError:
+            self.console.print("Authentication failed. Please check your email and password.", style="bold red")
+            return
         except Exception as e:
             self.console.print(f"Failed to send email: {e}", style="bold red")
+            return
 
 
 class Command(Emailsender):
@@ -84,11 +95,11 @@ class Command(Emailsender):
     def __init__(self):
         super().__init__()
         self.parser = argparse.ArgumentParser(description="Welcome to the email command prompt")  #creating an argument parser object
-        self.parser.add_argument("-s","--sender", required=True, help="Enter your email address")
-        self.parser.add_argument("-r","--receivers", required=True,
+        self.parser.add_argument("-s","--sender",  help="Enter your email address")
+        self.parser.add_argument("-r","--receivers", 
                                  help="Enter receiver email addresses ")
-        self.parser.add_argument("-t","--subject", required=True, help="Enter the subject")
-        self.parser.add_argument("-b","--body", required=True, help="Enter the body of your email")
+        self.parser.add_argument("-t","--subject",  help="Enter the subject")
+        self.parser.add_argument("-b","--body",  help="Enter the body of your email")
 
     def final_run(self):
         args = self.parser.parse_args()  #parse the arguments
