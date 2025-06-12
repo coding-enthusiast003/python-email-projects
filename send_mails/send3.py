@@ -22,6 +22,7 @@ class FinalCommand(cmd, Emailsender):
         self.sender = None
         self.password = None
         self.receivers = []
+        self.parser.add_argument("-time", "--time", type=str, required=False, help="Time to send the email in HH:MM format")  # Argument for scheduling time
         # self.parser.add_argument("-f", "--files", nargs="+", required=False, help="File paths to attach")
 
 
@@ -74,9 +75,16 @@ class FinalCommand(cmd, Emailsender):
 
             except Exception as e:
                 self.console.print(f"[bold red]Error occurred while adding attachments: {e}[/bold red]")
-            
-            # send the mail 
-            self.server_connection(msg)  # Send the email
+
+
+            scheduled = self.console.input("[bold green]Do you want to schedule the email? (yes/no):[/bold green]").strip().lower()
+            if scheduled == "yes" :
+                input_time = self.console.input("[bold yellow]Enter the time to send the email (HH:MM): [/bold yellow]")
+                # Pass only the required argument to the scheduler
+                time_scheduler(input_time,msg, self.server_connection)  # Call the time_scheduler function with the message and server connection
+            else:
+                # send the mail 
+                self.server_connection(msg)  # Send the email
 
         except FileNotFoundError as fnf_error:
             self.console.print(f"[bold red]File not found: {fnf_error}[/bold red]")
