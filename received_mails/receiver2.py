@@ -25,10 +25,11 @@ def extract_body(msg):
             for part in msg.walk():  # walk() in email module is used to iterate through the parts of the email message.
                 # Get the content type and disposition (header that indicates if the part is an attachment)
                 content_type = part.get_content_type()
-                content_disposition = str(part.get("Content-Disposition"))
+                content_disposition = str(part.get("Content-Disposition") or "")
+                filename = part.get_filename()
 
                 # Extract the plain text content
-                if content_type == "text/plain" and "attachment" not in content_disposition:
+                if content_type == "text/plain" and "attachment" not in content_disposition and not body:
                     try:
                         decoded_payload = part.get_payload(decode=True)
                         body = decoded_payload.decode() if decoded_payload else "(Empty Body)"
@@ -36,7 +37,7 @@ def extract_body(msg):
                         body = "Failed to decode email body."
 
                 # Extract HTML content and convert it to plain text
-                elif content_type == "text/html" and "attachment" not in content_disposition:
+                if content_type == "text/html" and "attachment" not in content_disposition and not html_content:
                     try:
                         html_payload = part.get_payload(decode=True)
                         if html_payload:
@@ -48,11 +49,10 @@ def extract_body(msg):
                         html_content = None
                         body = "Failed to decode HTML content."
 
-                # Collect attachment filenames and content
-                elif "attachment" in content_disposition:
-                    filename = part.get_filename()
+                # Collect any part with a filename as an attachment (covers inline images/videos)
+                if filename:
                     content = part.get_payload(decode=True)
-                    if filename and content:
+                    if content:
                         attachments.append((filename, content))
 
         else:
@@ -209,6 +209,7 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
             self.console.print("[bold red]Program exited.[/bold red]")    
         except Exception as e:
             print(f"An error occurred: {e}")
+        
         
 if __name__== "__main__":
     prompt = CommandInterface2()

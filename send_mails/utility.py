@@ -3,7 +3,8 @@ from rich.console import Console # For rich console output
 from rich.text import Text # For rich text formatting
 import time
 from datetime import datetime , timedelta # For handling date and time operations
- 
+
+
 # Create a console instance
 console = Console()
 
@@ -49,12 +50,8 @@ def time_scheduler(input_time, msg, server_connection):
     if scheduled_time < now:
         scheduled_time += timedelta(days=1) # If the scheduled time is in the past, schedule it for the next day
         # timedelta method is used to add a day to the scheduled time
-        console.print("[bold yellow]Scheduled time is in the past. Rescheduling to the next day.[/bold yellow]")
-
-    print()
     console.print(f"Email will be sent at {scheduled_time.strftime('%Y-%m-%d %H:%M:%S')}", style= "bold green")
     print()
     print()
     wait_time = (scheduled_time - now).total_seconds() # Calculate the wait time in seconds
     time.sleep(wait_time)
-    server_connection(msg)  # Send the email after waiting

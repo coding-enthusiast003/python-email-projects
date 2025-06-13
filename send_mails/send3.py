@@ -67,9 +67,16 @@ class FinalCommand(cmd, Emailsender):
             files = self.console.input("[bold green]DO you want to attach files? (yes/no):[/bold green]").strip().lower()
             try:
                 if files == "yes":
-                    args.files = args.files 
+                    file_list = []
                     if args.files:
-                        msg = self.add_attachments(msg, args.files)
+                        file_list = args.files
+                    else:
+                        file_input = self.console.input("[bold green]Enter file paths to attach (comma-separated):[/bold green] ").strip()
+                        if file_input:
+                            file_list = [f.strip() for f in file_input.split(",") if f.strip()]
+                    if file_list:
+                        self.console.print(f"[bold blue]Attaching files:[/bold blue] {', '.join(file_list)}")
+                        msg = self.add_attachments(msg, file_list)
                     else:
                         self.console.print("[bold red]No files provided for attachment.[/bold red]")
 
@@ -80,10 +87,9 @@ class FinalCommand(cmd, Emailsender):
             scheduled = self.console.input("[bold green]Do you want to schedule the email? (yes/no):[/bold green]").strip().lower()
             if scheduled == "yes" :
                 input_time = self.console.input("[bold yellow]Enter the time to send the email (HH:MM): [/bold yellow]")
-                # Pass only the required argument to the scheduler
-                time_scheduler(input_time,msg, self.server_connection)  # Call the time_scheduler function with the message and server connection
+                time_scheduler(input_time,self.server_connection,msg)  # Call the time_scheduler function to schedule the email
+            # send the mail immediately if not scheduled
             else:
-                # send the mail 
                 self.server_connection(msg)  # Send the email
 
         except FileNotFoundError as fnf_error:
