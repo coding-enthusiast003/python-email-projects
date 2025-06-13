@@ -1,11 +1,12 @@
 import email
-from received_mails.utility import *  # Importing the function from utility.py
+from .utility import *  # Importing the function from utility.py
 import textwrap
 import shutil
 from received_mails.receiver1 import CommandInterface
 from received_mails.scanfile import scan_attachment  # Importing specific function from scanfile.py
 from rich.console import Console
-
+  
+ 
 
 # Get terminal width, fallback to 100
 terminal_width = shutil.get_terminal_size((100, 20)).columns
@@ -209,8 +210,11 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
             self.console.print("[bold red]Program exited.[/bold red]")    
         except Exception as e:
             print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    """
+    Main entry point for the command-line interface.
+    """       
         
-        
-if __name__== "__main__":
     prompt = CommandInterface2()
     prompt.final_run()

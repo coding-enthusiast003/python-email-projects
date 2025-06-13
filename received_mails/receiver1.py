@@ -161,17 +161,11 @@ class CommandInterface(EmailReceiver): #Inheriting from EmailReceiver class
         except Exception as e:
             self.console.print(f"[bold red]An error occurred: {e}[/bold red]")
 
+            
 if __name__ == "__main__":
+    # Create an instance of the CommandInterface class and run the final_run method
     cli = CommandInterface() #creating an object of the Command class
     cli.final_run() #calling the final_run method to execute the program
-
-
-
-
-
-
-
-
 
 
 
