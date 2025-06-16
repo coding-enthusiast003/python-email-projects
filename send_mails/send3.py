@@ -75,6 +75,8 @@ class FinalCommand(cmd, Emailsender):
                         if file_input:
                             file_list = [f.strip() for f in file_input.split(",") if f.strip()]
                     if file_list:
+                        # Strip whitespace and quotes from each file path
+                        file_list = [f.strip().strip('"').strip("'") for f in file_list]
                         self.console.print(f"[bold blue]Attaching files:[/bold blue] {', '.join(file_list)}")
                         msg = self.add_attachments(msg, file_list)
                     else:

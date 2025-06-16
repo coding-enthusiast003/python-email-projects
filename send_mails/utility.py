@@ -54,4 +54,9 @@ def time_scheduler(input_time, msg, server_connection):
     print()
     print()
     wait_time = (scheduled_time - now).total_seconds() # Calculate the wait time in seconds
+    console.print(f"[bold yellow]Email sent after {wait_time} seconds.[/bold yellow]")
+
     time.sleep(wait_time)
+    # Send the email
+    server_connection.send_email(msg)
+    console.print("[bold green]Email sent successfully![/bold green]")  # Print success message

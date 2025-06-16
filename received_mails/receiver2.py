@@ -167,15 +167,20 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                             print()
                             # Scan the attachment using VirusTotal API for safety
                             prompt = input(f"Do you want to scan the attachment '{filename}' for safety? (y/n): ").strip().lower()
-                            if prompt == 'y' :
-                                self.api_key = input("Please enter your VirusTotal API key: ").strip()
-                                print("scanning attachments, please wait ...")
-                                print("It may take a few seconds to complete...")
-                                if scan_attachment(content, filename, self.api_key):
-                                    print()
-                                    self.console.print("✅ Attachment is safe.", style="green")
-                                else:
-                                    self.console.print("⚠️ Attachment flagged as unsafe.", style="bold red")
+                            try:
+                                if prompt not in ['y', 'n']:
+                                    raise ValueError("Invalid input. Please enter 'y' or 'n'.")
+                                if prompt == 'y':
+                                    self.api_key = input("Please enter your VirusTotal API key: ").strip()
+                                    print("scanning attachments, please wait ...")
+                                    print("It may take a few seconds to complete...")
+                                    if scan_attachment(content, filename, self.api_key):
+                                        print()
+                                        self.console.print("✅ Attachment is safe.", style="green")
+                                    else:
+                                        self.console.print("⚠️ Attachment flagged as unsafe.", style="bold red")
+                            except ValueError as e:
+                                self.console.print(f"[bold red]{e}[/bold red]")
                             print()
                             print()
 
@@ -186,6 +191,8 @@ class CommandInterface2(CommandInterface): #Inherited class from CommandInterfac
                                 filename = filename.replace("/", "_")  # Replace any slashes in the filename to avoid directory issues
                                 save(filename, content)  # Using the save function from utility.py
 
+                            else:
+                                self.console.print("Attachment not able to save. please try again.", style ="yellow")
                             print()
                             
                     else:
